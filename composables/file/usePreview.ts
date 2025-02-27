@@ -1,11 +1,16 @@
 import { ref, nextTick } from 'vue'
 import type { FileItem } from '~/types/file'
-import { isImage, isVideo, convertToProxyUrl } from '~/utils/file'
+import { isImage, isVideo } from '~/utils/file'
+import VideoPreview from '~/components/preview/VideoPreview.vue'
+
+type VideoPlayerInstance = InstanceType<typeof VideoPreview>
+
+const baseURL = process.client ? window.location.origin : ''
 
 export const usePreview = () => {
   const previewVideo = ref<string | null>(null)
   const previewImage = ref<string | null>(null)
-  const videoPlayer = ref<HTMLElement | null>(null)
+  const videoPlayer = ref<VideoPlayerInstance | null>(null)
   let player: any = null
 
   const { getDownloadUrl } = useAlistApi()
@@ -19,9 +24,6 @@ export const usePreview = () => {
     // 获取文件详情以获取 raw_url
     const url = await getDownloadUrl(`${currentPath}/${file.name}`)
     if (url) {
-      if (isVideo(file)) {
-        return convertToProxyUrl(url)
-      }
       return url
     }
 
@@ -35,37 +37,35 @@ export const usePreview = () => {
 
   const handleFileClick = async (file: FileItem, currentPath: string) => {
     try {
-      console.log('点击文件：', file)
       if (file.is_dir) {
         return { type: 'directory' as const }
-      } else if (isImage(file)) {
-        console.log('预览图片：', file.name)
-        const url = await getPreviewUrl(file, currentPath)
-        console.log('图片预览 URL：', url)
-        if (url) {
-          previewImage.value = url
-        }
-        return { type: 'image' as const }
-      } else if (isVideo(file)) {
-        console.log('预览视频：', file.name)
+      }
+
+      if (isVideo(file)) {
         const url = await getPreviewUrl(file, currentPath)
         console.log('视频预览 URL：', url)
         if (url) {
           previewVideo.value = url
           await nextTick()
-          if (videoPlayer.value) {
-            await initVideoPlayer()
-          }
+          await initVideoPlayer(url)
         }
         return { type: 'video' as const }
-      } else {
-        const url = await getPreviewUrl(file, currentPath)
-        console.log('文件下载 URL：', url)
-        if (url) {
-          window.open(url, '_blank')
-        }
-        return { type: 'file' as const }
       }
+
+      if (isImage(file)) {
+        const url = await getPreviewUrl(file, currentPath)
+        if (url) {
+          previewImage.value = url
+        }
+        return { type: 'image' as const }
+      }
+
+      // 其他类型文件直接下载
+      const url = await getPreviewUrl(file, currentPath)
+      if (url) {
+        window.open(url, '_blank')
+      }
+      return { type: 'other' as const }
     } catch (e) {
       console.error('处理文件点击失败：', e)
       return { type: 'error' as const, error: '处理文件失败' }
@@ -79,19 +79,23 @@ export const usePreview = () => {
       player.destroy()
       player = null
     }
+    if (videoPlayer.value?.setRotateHandler) {
+      videoPlayer.value.setRotateHandler(undefined)
+    }
   }
 
-  const initVideoPlayer = async () => {
-    if (!process.client || !videoPlayer.value || !previewVideo.value) {
-      console.log('视频播放器初始化条件不满足：', {
-        isClient: process.client,
-        hasVideoPlayer: !!videoPlayer.value,
-        hasPreviewVideo: !!previewVideo.value
-      })
-      return
-    }
+  const initVideoPlayer = async (url: string) => {
+    if (!process.client) return
 
     try {
+      const container = videoPlayer.value?.videoContainer
+      if (!container) {
+        throw new Error('Video container not found')
+      }
+
+      // 清理现有内容
+      container.innerHTML = ''
+
       console.log('开始初始化视频播放器')
       const [{ default: Plyr }, _] = await Promise.all([
         import('plyr'),
@@ -104,20 +108,74 @@ export const usePreview = () => {
         player = null
       }
 
+      // 创建 video 元素
       const video = document.createElement('video')
-      video.src = previewVideo.value
+      video.className = 'plyr-video'
+      video.playsInline = true
       video.controls = true
-      video.crossOrigin = 'anonymous'
-      videoPlayer.value.innerHTML = ''
-      videoPlayer.value.appendChild(video)
+
+      // 创建 source 元素
+      const source = document.createElement('source')
+      source.src = url
+      source.type = 'video/mp4'
+      video.appendChild(source)
+
+      // 添加到容器
+      container.appendChild(video)
       
+      // 初始化 Plyr
       player = new Plyr(video, {
-        controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+        controls: [
+          'play-large',
+          'play',
+          'progress',
+          'current-time',
+          'duration',
+          'mute',
+          'volume',
+          'settings',
+          'pip',
+          'airplay',
+          'fullscreen'
+        ],
+        settings: ['speed'],
+        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+        keyboard: { focused: true, global: true },
+        tooltips: { controls: true, seek: true },
+        ratio: '16:9'
       })
 
+      // 添加旋转控制
+      let currentRotation = 0
+      const rotateVideo = (direction: 'left' | 'right') => {
+        currentRotation = (currentRotation + (direction === 'left' ? -90 : 90)) % 360
+        video.style.transform = `rotate(${currentRotation}deg)`
+        // 根据旋转角度调整视频容器的宽高比
+        if (currentRotation % 180 === 0) {
+          container.style.aspectRatio = '16/9'
+        } else {
+          container.style.aspectRatio = '9/16'
+        }
+      }
+
+      // 监听播放器事件
+      player.on('ready', () => {
+        console.log('播放器准备就绪')
+        player.play()
+      })
+
+      player.on('error', (error: any) => {
+        console.error('播放器错误：', error)
+      })
+
+      // 设置旋转处理函数
+      if (videoPlayer.value?.setRotateHandler) {
+        videoPlayer.value.setRotateHandler(rotateVideo)
+      }
+
       console.log('视频播放器初始化完成')
-    } catch (e) {
-      console.error('加载视频播放器失败：', e)
+    } catch (error) {
+      console.error('加载视频播放器失败：', error)
     }
   }
 
