@@ -19,7 +19,8 @@
     "vue": "latest",
     "vue-easy-lightbox": "^1.19.0",
     "vue-router": "latest",
-    "vuetify-nuxt-module": "0.18.3"
+    "vuetify-nuxt-module": "0.18.3",
+    "zooming": "^2.1.1"
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
   "devDependencies": {

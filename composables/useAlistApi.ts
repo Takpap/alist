@@ -1,10 +1,7 @@
 interface AlistResponse<T> {
   code: number
   message: string
-  data: {
-    url: string
-    raw_url: string
-  }
+  data: T
 }
 
 interface FileInfo {
@@ -15,6 +12,7 @@ interface FileInfo {
   sign?: string
   thumb?: string
   type: number
+  raw_url?: string
 }
 
 interface FsListResponse {
@@ -23,6 +21,11 @@ interface FsListResponse {
   readme: string
   write: boolean
   provider: string
+}
+
+interface FsGetResponse {
+  url: string
+  raw_url?: string
 }
 
 export const useAlistApi = () => {
@@ -84,7 +87,7 @@ export const useAlistApi = () => {
     error.value = null
     
     try {
-      const response = await $fetch<AlistResponse<{ url: string }>>(`${baseUrl.value}/api/fs/get`, {
+      const response = await $fetch<AlistResponse<FsGetResponse>>(`${baseUrl.value}/api/fs/get`, {
         method: 'POST',
         headers: headers.value,
         body: {
@@ -97,7 +100,7 @@ export const useAlistApi = () => {
         throw new Error(response.message)
       }
 
-      return response.data.url || response.data.raw_url
+      return response.data.raw_url || response.data.url
     } catch (e: any) {
       console.error('获取下载链接失败：', e)
       error.value = e.message || '获取下载链接失败'
