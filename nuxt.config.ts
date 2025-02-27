@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@vueuse/nuxt',
     'vuetify-nuxt-module',
-    '@unocss/nuxt'
+    '@unocss/nuxt',
+    'nuxt-icon'
   ],
 
   // CSS

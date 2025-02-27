@@ -91,18 +91,14 @@
                   />
                 </ClientOnly>
                 <div class="absolute inset-0 flex items-center justify-center hover:bg-black hover:bg-opacity-30 rounded transition-all duration-200">
-                  <div class="p-1 rounded-full bg-black bg-opacity-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    </svg>
+                  <div class="p-0.5 rounded-full bg-opacity-50">
+                    <Icon name="ph:play-fill" class="w-4 h-4 text-white" />
                   </div>
                 </div>
               </div>
               <!-- 其他文件图标 -->
               <div v-else class="text-blue-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+                <Icon name="ph:file-text" class="h-6 w-6" />
               </div>
               
               <div class="flex-1 min-w-0">
@@ -145,9 +141,7 @@
             @click="closePreview"
             class="absolute top-4 right-4 text-white hover:text-gray-300 z-60"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="ph:x" class="h-6 w-6" />
           </button>
           <div ref="videoPlayer" class="w-full aspect-video bg-black rounded overflow-hidden"></div>
         </div>
@@ -499,7 +493,7 @@ const AsyncImage = defineComponent({
         h('div', { class: 'text-red-400 text-sm' }, '加载失败')
       ]),
       h('img', {
-        src: url.value || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        src: url.value || '',
         class: 'w-full h-full object-cover rounded',
         style: {
           opacity: loading.value || error.value ? 0 : 1
@@ -512,6 +506,10 @@ const AsyncImage = defineComponent({
           loading.value = false
           error.value = true
         }
+      }),
+      !url.value && !loading.value && !error.value && h(resolveComponent('Icon'), {
+        name: 'ph:image',
+        class: 'w-full h-full text-gray-400'
       })
     ])
   }
@@ -564,7 +562,7 @@ const AsyncVideo = defineComponent({
         h('div', { class: 'text-red-400 text-sm' }, '无预览图')
       ]),
       !error.value && h('img', {
-        src: url.value || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        src: url.value || '',
         class: 'w-full h-full object-cover rounded',
         style: {
           opacity: loading.value ? 0 : 1
@@ -579,6 +577,10 @@ const AsyncVideo = defineComponent({
           error.value = true
           console.error('视频预览图加载失败：', url.value)
         }
+      }),
+      !url.value && !loading.value && !error.value && h(resolveComponent('Icon'), {
+        name: 'ph:video-camera',
+        class: 'w-full h-full text-gray-400'
       })
     ])
   }
