@@ -92,7 +92,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
           </div>
-          <div class="mt-2 text-sm text-center truncate w-full">{{ file.name }}</div>
+          <div class="mt-2 text-sm text-center truncate w-full" :title="file.name">{{ file.name }}</div>
         </div>
 
         <!-- Image -->
@@ -105,9 +105,10 @@
               loading="lazy"
               alt=""
               @load="onImageLoad($event, file)"
+              :title="`${file.name}\n${formatFileSize(file.size)}`"
             />
           </div>
-          <div class="p-2 text-sm truncate">{{ file.name }}</div>
+          <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
         </div>
 
         <!-- Video -->
@@ -118,6 +119,7 @@
               class="w-full h-full object-cover rounded-lg"
               loading="lazy"
               alt=""
+              :title="`${file.name}\n${formatFileSize(file.size)}`"
             />
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="p-2 rounded-full bg-black/50">
@@ -127,7 +129,7 @@
               </div>
             </div>
           </div>
-          <div class="p-2 text-sm truncate">{{ file.name }}</div>
+          <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
         </div>
 
         <!-- Other Files -->
@@ -137,7 +139,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
           </div>
-          <div class="mt-2 text-sm text-center truncate w-full">{{ file.name }}</div>
+          <div class="mt-2 text-sm text-center truncate w-full" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
         </div>
       </div>
     </div>
@@ -158,7 +160,7 @@
             </svg>
           </div>
           <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate">{{ file.name }}</div>
+            <div class="text-sm font-medium text-gray-900 truncate" :title="file.name">{{ file.name }}</div>
             <div class="text-xs text-gray-500">{{ file.modified }}</div>
           </div>
         </div>
@@ -172,10 +174,11 @@
               class="w-full h-full object-cover rounded-lg cursor-zoom-in"
               loading="lazy"
               alt=""
+              :title="`${file.name}\n${formatFileSize(file.size)}`"
             />
           </div>
           <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate">{{ file.name }}</div>
+            <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
             <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
           </div>
         </div>
@@ -188,6 +191,7 @@
               class="w-full h-full object-cover rounded-lg"
               loading="lazy"
               alt=""
+              :title="`${file.name}\n${formatFileSize(file.size)}`"
             />
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="p-1 rounded-full bg-black/50">
@@ -198,7 +202,7 @@
             </div>
           </div>
           <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate">{{ file.name }}</div>
+            <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
             <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
           </div>
         </div>
@@ -211,7 +215,7 @@
             </svg>
           </div>
           <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate">{{ file.name }}</div>
+            <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
             <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
           </div>
         </div>
