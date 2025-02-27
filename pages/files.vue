@@ -18,6 +18,35 @@
             修改配置
           </button>
         </div>
+        <div class="flex items-center space-x-2">
+          <div v-if="layout === 'grid'" class="flex items-center space-x-2 mr-4">
+            <input
+              type="range"
+              min="2"
+              max="16"
+              step="1"
+              v-model.number="gridColumns"
+              class="w-24 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            >
+            <span class="text-sm text-gray-500">{{ gridColumns }} 列</span>
+          </div>
+          <button
+            @click="layout = 'grid'"
+            class="p-1.5 rounded hover:bg-gray-100"
+            :class="{ 'bg-gray-100': layout === 'grid' }"
+            title="网格视图"
+          >
+            <Icon name="ph:grid-four" class="h-4 w-4" />
+          </button>
+          <button
+            @click="layout = 'list'"
+            class="p-1.5 rounded hover:bg-gray-100"
+            :class="{ 'bg-gray-100': layout === 'list' }"
+            title="列表视图"
+          >
+            <Icon name="ph:list" class="h-4 w-4" />
+          </button>
+        </div>
       </div>
       
       <!-- 路径导航 -->
@@ -56,22 +85,42 @@
         <div v-if="files.length === 0" class="flex items-center justify-center h-full text-gray-600">
           文件夹为空
         </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- 网格视图 -->
+        <div 
+          v-else-if="layout === 'grid'" 
+          class="grid gap-4"
+          :class="{
+            'grid-cols-2': gridColumns === 2,
+            'grid-cols-3': gridColumns === 3,
+            'grid-cols-4': gridColumns === 4,
+            'grid-cols-5': gridColumns === 5,
+            'grid-cols-6': gridColumns === 6,
+            'grid-cols-7': gridColumns === 7,
+            'grid-cols-8': gridColumns === 8,
+            'grid-cols-9': gridColumns === 9,
+            'grid-cols-10': gridColumns === 10,
+            'grid-cols-11': gridColumns === 11,
+            'grid-cols-12': gridColumns === 12,
+            'grid-cols-13': gridColumns === 13,
+            'grid-cols-14': gridColumns === 14,
+            'grid-cols-15': gridColumns === 15,
+            'grid-cols-16': gridColumns === 16
+          }"
+        >
           <div
             v-for="file in files"
             :key="file.name"
             @click="handleFileClick(file)"
-            class="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+            class="p-2 border rounded-lg hover:bg-gray-50 cursor-pointer flex flex-col"
           >
-            <div class="flex items-center space-x-3">
+            <!-- 预览区域 -->
+            <div class="flex justify-center mb-2">
               <!-- 文件夹图标 -->
-              <div v-if="file.is_dir" class="text-yellow-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
+              <div v-if="file.is_dir" class="text-yellow-500 w-20 h-20 flex items-center justify-center">
+                <Icon name="ph:folder" class="h-12 w-12" />
               </div>
               <!-- 图片预览 -->
-              <div v-else-if="isImage(file)" class="w-12 h-12 flex-shrink-0">
+              <div v-else-if="isImage(file)" class="w-20 h-20 flex-shrink-0">
                 <ClientOnly>
                   <AsyncImage
                     :file="file"
@@ -82,7 +131,7 @@
                 </ClientOnly>
               </div>
               <!-- 视频预览 -->
-              <div v-else-if="isVideo(file)" class="w-12 h-12 flex-shrink-0 relative">
+              <div v-else-if="isVideo(file)" class="w-20 h-20 flex-shrink-0 relative">
                 <ClientOnly>
                   <AsyncVideo
                     :file="file"
@@ -91,21 +140,73 @@
                   />
                 </ClientOnly>
                 <div class="absolute inset-0 flex items-center justify-center hover:bg-black hover:bg-opacity-30 rounded transition-all duration-200">
-                  <div class="p-0.5 rounded-full bg-opacity-50">
-                    <Icon name="ph:play-fill" class="w-4 h-4 text-white" />
+                  <div class="rounded-full">
+                    <Icon name="ph:play-fill" class="w-6 h-6 text-white drop-shadow-lg" />
                   </div>
                 </div>
               </div>
               <!-- 其他文件图标 -->
-              <div v-else class="text-blue-500">
-                <Icon name="ph:file-text" class="h-6 w-6" />
+              <div v-else class="text-blue-500 w-20 h-20 flex items-center justify-center">
+                <Icon name="ph:file-text" class="h-12 w-12" />
               </div>
-              
-              <div class="flex-1 min-w-0">
-                <div class="truncate">{{ file.name }}</div>
-                <div class="text-sm text-gray-500">
-                  {{ file.is_dir ? '文件夹' : formatFileSize(file.size) }}
+            </div>
+            
+            <!-- 文件信息 -->
+            <div class="min-w-0 px-1">
+              <div class="text-sm truncate">{{ file.name }}</div>
+              <div class="text-xs text-gray-500">
+                {{ file.is_dir ? '文件夹' : formatFileSize(file.size) }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 列表视图 -->
+        <div v-else class="divide-y">
+          <div
+            v-for="file in files"
+            :key="file.name"
+            @click="handleFileClick(file)"
+            class="flex items-center space-x-4 px-4 py-3 hover:bg-gray-50 cursor-pointer"
+          >
+            <!-- 文件夹图标 -->
+            <div v-if="file.is_dir" class="text-yellow-500">
+              <Icon name="ph:folder" class="h-5 w-5" />
+            </div>
+            <!-- 图片预览 -->
+            <div v-else-if="isImage(file)" class="w-12 h-12 flex-shrink-0">
+              <ClientOnly>
+                <AsyncImage
+                  :file="file"
+                  :current-path="currentPath"
+                  class="w-full h-full object-cover rounded"
+                  @error="handleImageError"
+                />
+              </ClientOnly>
+            </div>
+            <!-- 视频预览 -->
+            <div v-else-if="isVideo(file)" class="w-12 h-12 flex-shrink-0 relative">
+              <ClientOnly>
+                <AsyncVideo
+                  :file="file"
+                  :current-path="currentPath"
+                  class="w-full h-full object-cover rounded"
+                />
+              </ClientOnly>
+              <div class="absolute inset-0 flex items-center justify-center hover:bg-black hover:bg-opacity-30 rounded transition-all duration-200">
+                <div class="rounded-full">
+                  <Icon name="ph:play-fill" class="w-4 h-4 text-white drop-shadow-lg" />
                 </div>
+              </div>
+            </div>
+            <!-- 其他文件图标 -->
+            <div v-else class="text-blue-500">
+              <Icon name="ph:file-text" class="h-5 w-5" />
+            </div>
+            
+            <div class="flex-1 min-w-0 flex items-center justify-between">
+              <div class="truncate">{{ file.name }}</div>
+              <div class="text-sm text-gray-500 ml-4">
+                {{ file.is_dir ? '文件夹' : formatFileSize(file.size) }}
               </div>
             </div>
           </div>
@@ -178,6 +279,8 @@ const previewVideo = ref<string | null>(null)
 const videoPlayer = ref<HTMLElement | null>(null)
 const container = ref<HTMLElement | null>(null)
 let player: any = null
+const layout = ref<'grid' | 'list'>('grid')
+const gridColumns = ref<number>(3)
 
 console.log('组件初始化', {
   baseUrl: baseUrl.value,
@@ -410,11 +513,44 @@ watch(currentPath, () => {
   saveCurrentPath()
 })
 
-// 组件挂载时加载上次路径
+// 保存布局到 localStorage
+const saveLayout = () => {
+  localStorage.setItem('alist-layout', layout.value)
+  if (layout.value === 'grid') {
+    localStorage.setItem('alist-grid-columns', gridColumns.value.toString())
+  }
+}
+
+// 监听布局变化
+watch(layout, () => {
+  saveLayout()
+})
+
+// 监听列数变化
+watch(gridColumns, () => {
+  if (layout.value === 'grid') {
+    localStorage.setItem('alist-grid-columns', gridColumns.value.toString())
+  }
+})
+
+// 组件挂载时加载上次路径和布局
 onMounted(async () => {
   const lastPath = localStorage.getItem('alist-last-path')
   if (lastPath) {
     currentPath.value = lastPath
+  }
+  const savedLayout = localStorage.getItem('alist-layout')
+  if (savedLayout === 'grid' || savedLayout === 'list') {
+    layout.value = savedLayout
+  }
+  if (layout.value === 'grid') {
+    const savedGridColumns = localStorage.getItem('alist-grid-columns')
+    if (savedGridColumns) {
+      const columns = parseInt(savedGridColumns)
+      if (columns >= 2 && columns <= 16) {
+        gridColumns.value = columns
+      }
+    }
   }
   try {
     console.log('组件挂载，检查配置状态：', {
