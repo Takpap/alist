@@ -247,16 +247,40 @@ const isVideo = (file: FileItem) => {
 
 // 获取预览URL
 const getPreviewUrl = async (file: FileItem) => {
+  if (isVideo(file)) {
+    console.log('获取视频下载链接：', `${currentPath.value}/${file.name}`)
+    const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
+    return convertToProxyUrl(url)
+  }
+
   if (file.raw_url) {
     console.log('使用原始URL：', file.raw_url)
     return file.raw_url
   }
 
-  if (isImage(file) || isVideo(file)) {
-    console.log('获取下载链接：', `${currentPath.value}/${file.name}`)
+  if (file.thumb) {
+    console.log('使用缩略图：', file.thumb)
+    return file.thumb
+  }
+
+  if (isImage(file)) {
+    console.log('获取图片下载链接：', `${currentPath.value}/${file.name}`)
     return await getDownloadUrl(`${currentPath.value}/${file.name}`)
   }
+
   return ''
+}
+
+// 转换为代理URL
+const convertToProxyUrl = (url: string) => {
+  try {
+    const originalUrl = new URL(url)
+    // 保持完整的路径和查询参数
+    return `/proxy${originalUrl.pathname}${originalUrl.search}${originalUrl.hash}`
+  } catch (e) {
+    console.error('URL转换失败：', e)
+    return url
+  }
 }
 
 // 处理图片加载错误
