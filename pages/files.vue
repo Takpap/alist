@@ -1,23 +1,43 @@
 <template>
   <div class="min-h-screen flex flex-col p-4">
     <!-- 顶部导航栏 -->
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center space-x-2">
-        <button
-          @click="navigateBack"
-          class="px-3 py-1 text-sm border rounded hover:bg-gray-100"
-          :disabled="currentPath === '/'"
-        >
-          返回上级
-        </button>
-        <div class="text-gray-600">当前路径: {{ currentPath }}</div>
+    <div class="flex flex-col space-y-2 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <button
+            @click="navigateBack"
+            class="px-3 py-1 text-sm border rounded hover:bg-gray-100"
+            :disabled="currentPath === '/'"
+          >
+            返回上级
+          </button>
+          <button
+            @click="goToConfig"
+            class="px-3 py-1 text-sm border rounded hover:bg-gray-100"
+          >
+            修改配置
+          </button>
+        </div>
       </div>
-      <button
-        @click="goToConfig"
-        class="px-3 py-1 text-sm border rounded hover:bg-gray-100"
-      >
-        修改配置
-      </button>
+      
+      <!-- 路径导航 -->
+      <div class="flex items-center space-x-1 text-sm overflow-x-auto">
+        <button
+          @click="navigateTo('/')"
+          class="px-2 py-1 hover:bg-gray-100 rounded"
+        >
+          根目录
+        </button>
+        <template v-for="(segment, index) in pathSegments" :key="index">
+          <span class="text-gray-400">/</span>
+          <button
+            @click="navigateTo(getPathUpTo(index))"
+            class="px-2 py-1 hover:bg-gray-100 rounded truncate max-w-[200px]"
+          >
+            {{ segment }}
+          </button>
+        </template>
+      </div>
     </div>
 
     <!-- 加载状态 -->
@@ -137,7 +157,7 @@
 <script setup lang="ts">
 import VueEasyLightbox from 'vue-easy-lightbox'
 import { useVirtualList } from '@vueuse/core'
-import { defineComponent, h, ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { defineComponent, h, ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import type { PropType } from 'vue'
 import { useRouter, useRoute, navigateTo } from '#app'
 
@@ -178,6 +198,22 @@ const { list: displayedFiles } = useVirtualList(files, {
 // 在模板中使用的计算属性
 const displayedFileItems = computed(() => displayedFiles.value.map(item => item.data))
 
+// 计算路径段
+const pathSegments = computed(() => {
+  return currentPath.value.split('/').filter(Boolean)
+})
+
+// 获取到指定索引的路径
+const getPathUpTo = (index: number) => {
+  return '/' + pathSegments.value.slice(0, index + 1).join('/')
+}
+
+// 导航到指定路径
+const navigateTo = async (path: string) => {
+  currentPath.value = path
+  await loadFiles()
+}
+
 // 加载文件列表
 const loadFiles = async () => {
   try {
@@ -215,10 +251,7 @@ const getPreviewUrl = async (file: FileItem) => {
     console.log('使用原始URL：', file.raw_url)
     return file.raw_url
   }
-  if (file.thumb) {
-    console.log('使用缩略图：', file.thumb)
-    return file.thumb
-  }
+
   if (isImage(file) || isVideo(file)) {
     console.log('获取下载链接：', `${currentPath.value}/${file.name}`)
     return await getDownloadUrl(`${currentPath.value}/${file.name}`)
@@ -275,10 +308,9 @@ const handleFileClick = async (file: FileItem) => {
 // 返回上级目录
 const navigateBack = async () => {
   if (currentPath.value === '/') return
-  
-  const parts = currentPath.value.split('/')
-  parts.pop()
-  currentPath.value = parts.join('/') || '/'
+  const segments = currentPath.value.split('/').filter(Boolean)
+  segments.pop()
+  currentPath.value = segments.length ? '/' + segments.join('/') : '/'
   await loadFiles()
 }
 
@@ -348,8 +380,22 @@ const initVideoPlayer = async () => {
   }
 }
 
-// 如果未配置，重定向到首页
+// 保存当前路径到 localStorage
+const saveCurrentPath = () => {
+  localStorage.setItem('alist-last-path', currentPath.value)
+}
+
+// 监听路径变化
+watch(currentPath, () => {
+  saveCurrentPath()
+})
+
+// 组件挂载时加载上次路径
 onMounted(async () => {
+  const lastPath = localStorage.getItem('alist-last-path')
+  if (lastPath) {
+    currentPath.value = lastPath
+  }
   try {
     console.log('组件挂载，检查配置状态：', {
       baseUrl: baseUrl.value,
@@ -403,7 +449,6 @@ const AsyncImage = defineComponent({
     onMounted(async () => {
       try {
         if (props.file.thumb) {
-          console.log('使用缩略图：', props.file.thumb)
           url.value = props.file.thumb
         } else {
           console.log('获取下载链接：', `${props.currentPath}/${props.file.name}`)

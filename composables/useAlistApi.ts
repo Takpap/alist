@@ -1,7 +1,10 @@
 interface AlistResponse<T> {
   code: number
   message: string
-  data: T
+  data: {
+    url: string
+    raw_url: string
+  }
 }
 
 interface FileInfo {
@@ -94,7 +97,7 @@ export const useAlistApi = () => {
         throw new Error(response.message)
       }
 
-      return response.data.url
+      return response.data.url || response.data.raw_url
     } catch (e: any) {
       console.error('获取下载链接失败：', e)
       error.value = e.message || '获取下载链接失败'
