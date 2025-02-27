@@ -90,10 +90,12 @@
                     class="w-full h-full object-cover rounded"
                   />
                 </ClientOnly>
-                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  </svg>
+                <div class="absolute inset-0 flex items-center justify-center hover:bg-black hover:bg-opacity-30 rounded transition-all duration-200">
+                  <div class="p-1 rounded-full bg-black bg-opacity-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
               <!-- 其他文件图标 -->
@@ -529,25 +531,56 @@ const AsyncVideo = defineComponent({
   },
   setup(props) {
     const url = ref('')
-    const { getDownloadUrl } = useAlistApi()
+    const loading = ref(true)
+    const error = ref(false)
 
-    onMounted(async () => {
-      if (props.file.raw_url) {
-        url.value = props.file.raw_url
-      } else if (props.file.thumb) {
-        url.value = props.file.thumb
-      } else {
-        const downloadUrl = await getDownloadUrl(`${props.currentPath}/${props.file.name}`)
-        if (downloadUrl) {
-          url.value = downloadUrl
+    onMounted(() => {
+      try {
+        console.log('视频文件信息：', props.file)
+        // 使用 raw_url 或 thumb
+        if (props.file.raw_url) {
+          url.value = props.file.raw_url
+          console.log('使用视频 raw_url：', url.value)
+        } else if (props.file.thumb) {
+          url.value = props.file.thumb
+          console.log('使用视频 thumb：', url.value)
+        } else {
+          console.warn('视频没有预览图')
+          error.value = true
         }
+      } catch (e) {
+        console.error('加载视频缩略图失败：', e)
+        error.value = true
+      } finally {
+        loading.value = false
       }
     })
 
-    return () => h('video', {
-      src: url.value,
-      preload: 'metadata'
-    })
+    return () => h('div', { class: 'relative w-full h-full' }, [
+      loading.value && h('div', { class: 'absolute inset-0 flex items-center justify-center bg-gray-100 rounded' }, [
+        h('div', { class: 'text-gray-400 text-sm' }, '加载中...')
+      ]),
+      error.value && h('div', { class: 'absolute inset-0 flex items-center justify-center bg-gray-100 rounded' }, [
+        h('div', { class: 'text-red-400 text-sm' }, '无预览图')
+      ]),
+      !error.value && h('img', {
+        src: url.value || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        class: 'w-full h-full object-cover rounded',
+        style: {
+          opacity: loading.value ? 0 : 1
+        },
+        loading: 'lazy',
+        onLoad: () => {
+          loading.value = false
+          error.value = false
+        },
+        onError: () => {
+          loading.value = false
+          error.value = true
+          console.error('视频预览图加载失败：', url.value)
+        }
+      })
+    ])
   }
 })
 
