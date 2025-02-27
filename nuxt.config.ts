@@ -27,16 +27,6 @@ export default defineNuxtConfig({
     }
   },
 
-  // 配置代理
-  nitro: {
-    devProxy: {
-      '/proxy': {
-        target: 'https://obs-shh2-qysuzhou-person.obs.cn-jssz1.ctyun.cn',
-        changeOrigin: true
-      }
-    }
-  },
-
   // 配置 UnoCSS
   unocss: {
     uno: true,

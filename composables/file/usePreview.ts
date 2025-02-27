@@ -1,6 +1,6 @@
 import { ref, nextTick } from 'vue'
 import type { FileItem } from '~/types/file'
-import { isImage, isVideo } from '~/utils/file'
+import { isImage, isVideo, convertToProxyUrl } from '~/utils/file'
 import VideoPreview from '~/components/preview/VideoPreview.vue'
 
 type VideoPlayerInstance = InstanceType<typeof VideoPreview>
@@ -15,6 +15,62 @@ export const usePreview = () => {
 
   const { getDownloadUrl } = useAlistApi()
 
+  // 处理 HEIC 图片转换
+  const convertHeicToJpeg = async (url: string) => {
+    if (!process.client) return url
+
+    try {
+      console.log('Converting HEIC image...')
+      // 动态导入 heic2any
+      const { default: heic2any } = await import('heic2any')
+      
+      // 使用代理 URL
+      const proxyUrl = convertToProxyUrl(url)
+      console.log('Using proxy URL for HEIC conversion:', proxyUrl)
+      
+      // 获取 HEIC 图片数据
+      const response = await fetch(proxyUrl, {
+        mode: 'cors',
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'image/heic,image/heif,image/*'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch HEIC image: ${response.status} ${response.statusText}`)
+      }
+      
+      const blob = await response.blob()
+      console.log('HEIC blob received, size:', blob.size)
+      
+      // 转换为 JPEG
+      const jpegBlob = await heic2any({
+        blob,
+        toType: 'image/jpeg',
+        quality: 1
+      }) as Blob
+      
+      console.log('HEIC conversion successful, new size:', jpegBlob.size)
+      
+      // 创建预览 URL
+      const previewUrl = URL.createObjectURL(jpegBlob)
+      
+      // 在组件卸载时清理 URL
+      onUnmounted(() => {
+        if (previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(previewUrl)
+        }
+      })
+      
+      return previewUrl
+    } catch (error) {
+      console.error('HEIC conversion failed:', error)
+      // 转换失败时尝试使用代理 URL
+      return convertToProxyUrl(url)
+    }
+  }
+
   const getPreviewUrl = async (file: FileItem, currentPath: string) => {
     // 优先使用 raw_url
     if (file.raw_url) {
@@ -24,12 +80,17 @@ export const usePreview = () => {
     // 获取文件详情以获取 raw_url
     const url = await getDownloadUrl(`${currentPath}/${file.name}`)
     if (url) {
-      return url
+      // 对于 HEIC/HEIF 文件，直接返回原始 URL，让 convertHeicToJpeg 处理
+      if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        return url
+      }
+      // 对于其他文件，使用代理 URL
+      return convertToProxyUrl(url)
     }
 
     // 如果都获取失败，使用缩略图
     if (file.thumb) {
-      return file.thumb
+      return convertToProxyUrl(file.thumb)
     }
 
     return ''
@@ -55,7 +116,12 @@ export const usePreview = () => {
       if (isImage(file)) {
         const url = await getPreviewUrl(file, currentPath)
         if (url) {
-          previewImage.value = url
+          // 检查是否是 HEIC 格式
+          if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+            previewImage.value = await convertHeicToJpeg(url)
+          } else {
+            previewImage.value = url
+          }
         }
         return { type: 'image' as const }
       }

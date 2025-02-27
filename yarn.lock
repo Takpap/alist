@@ -1354,6 +1354,13 @@
   resolved "https://mirrors.cloud.tencent.com/npm/@types/estree/-/estree-1.0.6.tgz#628effeeae2064a1b4e79f78e81d87b7e5fc7b50"
   integrity sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==
 
+"@types/http-proxy-middleware@^1.0.0":
+  version "1.0.0"
+  resolved "https://mirrors.cloud.tencent.com/npm/@types/http-proxy-middleware/-/http-proxy-middleware-1.0.0.tgz#4370a52766782e9c4f0be2ef79c3dd47aef5f428"
+  integrity sha512-/s8lFX6rT43hSPqjjD8KNuu0SkPKY7uIdR6u9DCxVqCRhAvfKxGbVOixJsAT2mdpSnCyrGFAGoB39KFh6tmRxw==
+  dependencies:
+    http-proxy-middleware "*"
+
 "@types/http-proxy@^1.17.15":
   version "1.17.16"
   resolved "https://mirrors.cloud.tencent.com/npm/@types/http-proxy/-/http-proxy-1.17.16.tgz#dee360707b35b3cc85afcde89ffeebff7d7f9240"
@@ -2974,6 +2981,11 @@ event-target-shim@^5.0.0:
   resolved "https://mirrors.cloud.tencent.com/npm/event-target-shim/-/event-target-shim-5.0.1.tgz#5d4d3ebdf9583d63a5333ce2deb7480ab2b05789"
   integrity sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==
 
+eventemitter3@^4.0.0:
+  version "4.0.7"
+  resolved "https://mirrors.cloud.tencent.com/npm/eventemitter3/-/eventemitter3-4.0.7.tgz#2de9b68f6528d5644ef5c59526a1b4a07306169f"
+  integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
+
 events@^3.3.0:
   version "3.3.0"
   resolved "https://mirrors.cloud.tencent.com/npm/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
@@ -3078,6 +3090,11 @@ flatted@^3.3.2:
   version "3.3.3"
   resolved "https://mirrors.cloud.tencent.com/npm/flatted/-/flatted-3.3.3.tgz#67c8fad95454a7c7abebf74bb78ee74a44023358"
   integrity sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==
+
+follow-redirects@^1.0.0:
+  version "1.15.9"
+  resolved "https://mirrors.cloud.tencent.com/npm/follow-redirects/-/follow-redirects-1.15.9.tgz#a604fa10e443bf98ca94228d9eebcc2e8a2c8ee1"
+  integrity sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==
 
 foreground-child@^3.1.0:
   version "3.3.1"
@@ -3314,6 +3331,11 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
+heic2any@^0.0.4:
+  version "0.0.4"
+  resolved "https://mirrors.cloud.tencent.com/npm/heic2any/-/heic2any-0.0.4.tgz#eddb8e6fec53c8583a6e18b65069bb5e8d19028a"
+  integrity sha512-3lLnZiDELfabVH87htnRolZ2iehX9zwpRyGNz22GKXIu0fznlblf0/ftppXKNqS26dqFSeqfIBhAmAj/uSp0cA==
+
 hookable@^5.5.3:
   version "5.5.3"
   resolved "https://mirrors.cloud.tencent.com/npm/hookable/-/hookable-5.5.3.tgz#6cfc358984a1ef991e2518cb9ed4a778bbd3215d"
@@ -3334,6 +3356,27 @@ http-errors@2.0.0:
     setprototypeof "1.2.0"
     statuses "2.0.1"
     toidentifier "1.0.1"
+
+http-proxy-middleware@*, http-proxy-middleware@^3.0.3:
+  version "3.0.3"
+  resolved "https://mirrors.cloud.tencent.com/npm/http-proxy-middleware/-/http-proxy-middleware-3.0.3.tgz#dc1313c75bd00d81e103823802551ee30130ebd1"
+  integrity sha512-usY0HG5nyDUwtqpiZdETNbmKtw3QQ1jwYFZ9wi5iHzX2BcILwQKtYDJPo7XHTsu5Z0B2Hj3W9NNnbd+AjFWjqg==
+  dependencies:
+    "@types/http-proxy" "^1.17.15"
+    debug "^4.3.6"
+    http-proxy "^1.18.1"
+    is-glob "^4.0.3"
+    is-plain-object "^5.0.0"
+    micromatch "^4.0.8"
+
+http-proxy@^1.18.1:
+  version "1.18.1"
+  resolved "https://mirrors.cloud.tencent.com/npm/http-proxy/-/http-proxy-1.18.1.tgz#401541f0534884bbf95260334e72f88ee3976549"
+  integrity sha512-7mz/721AbnJwIVbnaSv1Cz3Am0ZLT/UBwkC92VlxhXv/k/BBQfM2fXElQNC27BVGr0uwUpplYPQM9LnaBMR5NQ==
+  dependencies:
+    eventemitter3 "^4.0.0"
+    follow-redirects "^1.0.0"
+    requires-port "^1.0.0"
 
 http-shutdown@^1.2.2:
   version "1.2.2"
@@ -3547,6 +3590,11 @@ is-path-inside@^4.0.0:
   version "4.0.0"
   resolved "https://mirrors.cloud.tencent.com/npm/is-path-inside/-/is-path-inside-4.0.0.tgz#805aeb62c47c1b12fc3fd13bfb3ed1e7430071db"
   integrity sha512-lJJV/5dYS+RcL8uQdBDW9c9uWFLLBNRyFhnAKXw5tVqLlKZ4RMGZKv+YQ/IA3OhD+RpbJa1LLFM1FQPGyIXvOA==
+
+is-plain-object@^5.0.0:
+  version "5.0.0"
+  resolved "https://mirrors.cloud.tencent.com/npm/is-plain-object/-/is-plain-object-5.0.0.tgz#4427f50ab3429e9025ea7d52e9043a9ef4159344"
+  integrity sha512-VRSzKkbMm5jMDoKLbltAkFQ5Qr7VDiTFGXxYFXXowVj387GeGNOCsOH6Msy00SGZ3Fp84b1Naa1psqgcCIEP5Q==
 
 is-reference@1.2.1:
   version "1.2.1"
@@ -4904,6 +4952,11 @@ require-from-string@^2.0.2:
   version "2.0.2"
   resolved "https://mirrors.cloud.tencent.com/npm/require-from-string/-/require-from-string-2.0.2.tgz#89a7fdd938261267318eafe14f9c32e598c36909"
   integrity sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==
+
+requires-port@^1.0.0:
+  version "1.0.0"
+  resolved "https://mirrors.cloud.tencent.com/npm/requires-port/-/requires-port-1.0.0.tgz#925d2601d39ac485e091cf0da5c6e694dc3dcaff"
+  integrity sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==
 
 resolve-from@^5.0.0:
   version "5.0.0"

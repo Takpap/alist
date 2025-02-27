@@ -1,7 +1,7 @@
 import type { FileItem } from '~/types/file'
 
 export const isImage = (file: FileItem) => {
-  const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+  const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif']
   return !file.is_dir && imageExts.some(ext => file.name.toLowerCase().endsWith(ext))
 }
 
@@ -21,7 +21,9 @@ export const formatFileSize = (bytes: number) => {
 export const convertToProxyUrl = (url: string) => {
   try {
     const originalUrl = new URL(url)
-    return `/proxy${originalUrl.pathname}${originalUrl.search}${originalUrl.hash}`
+    // 获取域名作为代理的标识
+    const proxyKey = originalUrl.hostname
+    return `/proxy/${proxyKey}${originalUrl.pathname}${originalUrl.search}${originalUrl.hash}`
   } catch (e) {
     console.error('URL转换失败：', e)
     return url
