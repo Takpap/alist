@@ -102,22 +102,32 @@
         :imgs="previewImage ? [previewImage] : []"
         :index="0"
         @hide="closePreview"
-      />
+        :moveDisabled="true"
+        :rotateDisabled="true"
+        :teleport="'body'"
+      >
+        <template #loading>
+          <div class="text-gray-400">加载中...</div>
+        </template>
+        <template #error>
+          <div class="text-red-400">加载失败</div>
+        </template>
+      </vue-easy-lightbox>
     </ClientOnly>
 
     <!-- 视频预览 -->
     <ClientOnly>
       <div v-if="previewVideo" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-        <div class="relative w-full max-w-4xl">
+        <div class="relative w-full max-w-4xl mx-auto px-4">
           <button
             @click="closePreview"
-            class="absolute top-4 right-4 text-white hover:text-gray-300"
+            class="absolute top-4 right-4 text-white hover:text-gray-300 z-60"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <div ref="videoPlayer" class="w-full"></div>
+          <div ref="videoPlayer" class="w-full aspect-video bg-black rounded overflow-hidden"></div>
         </div>
       </div>
     </ClientOnly>
@@ -139,6 +149,7 @@ interface FileItem {
   sign?: string
   thumb?: string
   type: number
+  raw_url?: string
 }
 
 const { baseUrl, isConfigured, isEditing } = useAlistConfig()
@@ -200,8 +211,16 @@ const isVideo = (file: FileItem) => {
 
 // 获取预览URL
 const getPreviewUrl = async (file: FileItem) => {
-  if (file.thumb) return file.thumb
+  if (file.raw_url) {
+    console.log('使用原始URL：', file.raw_url)
+    return file.raw_url
+  }
+  if (file.thumb) {
+    console.log('使用缩略图：', file.thumb)
+    return file.thumb
+  }
   if (isImage(file) || isVideo(file)) {
+    console.log('获取下载链接：', `${currentPath.value}/${file.name}`)
     return await getDownloadUrl(`${currentPath.value}/${file.name}`)
   }
   return ''
@@ -224,25 +243,25 @@ const handleFileClick = async (file: FileItem) => {
       await loadFiles()
     } else if (isImage(file)) {
       console.log('预览图片：', file.name)
-      const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
+      const url = await getPreviewUrl(file)
+      console.log('图片预览 URL：', url)
       if (url) {
         previewImage.value = url
       }
     } else if (isVideo(file)) {
       console.log('预览视频：', file.name)
-      const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
-      console.log('video url', url)
+      const url = await getPreviewUrl(file)
+      console.log('视频预览 URL：', url)
       if (url) {
         previewVideo.value = url
-        nextTick(async () => {
-          if (videoPlayer.value) {
-            await initVideoPlayer()
-          }
-        })
+        await nextTick()
+        if (videoPlayer.value) {
+          await initVideoPlayer()
+        }
       }
     } else {
-      const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
-      console.log('url', url)
+      const url = await getPreviewUrl(file)
+      console.log('文件下载 URL：', url)
       if (url) {
         window.open(url, '_blank')
       }
@@ -289,26 +308,43 @@ const closePreview = () => {
 
 // 视频预览组件
 const initVideoPlayer = async () => {
-  if (process.client && videoPlayer.value && previewVideo.value) {
-    try {
-      // 动态导入 Plyr
-      const [{ default: Plyr }, _] = await Promise.all([
-        import('plyr'),
-        import('plyr/dist/plyr.css')
-      ])
+  if (!process.client || !videoPlayer.value || !previewVideo.value) {
+    console.log('视频播放器初始化条件不满足：', {
+      isClient: process.client,
+      hasVideoPlayer: !!videoPlayer.value,
+      hasPreviewVideo: !!previewVideo.value
+    })
+    return
+  }
 
-      const video = document.createElement('video')
-      video.src = previewVideo.value
-      video.controls = true
-      videoPlayer.value.innerHTML = ''
-      videoPlayer.value.appendChild(video)
-      
-      player = new Plyr(video, {
-        controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-      })
-    } catch (e) {
-      console.error('加载视频播放器失败：', e)
+  try {
+    console.log('开始初始化视频播放器')
+    // 动态导入 Plyr
+    const [{ default: Plyr }, _] = await Promise.all([
+      import('plyr'),
+      import('plyr/dist/plyr.css')
+    ])
+
+    if (player) {
+      console.log('销毁旧的播放器')
+      player.destroy()
+      player = null
     }
+
+    const video = document.createElement('video')
+    video.src = previewVideo.value
+    video.controls = true
+    video.crossOrigin = 'anonymous'
+    videoPlayer.value.innerHTML = ''
+    videoPlayer.value.appendChild(video)
+    
+    player = new Plyr(video, {
+      controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+    })
+
+    console.log('视频播放器初始化完成')
+  } catch (e) {
+    console.error('加载视频播放器失败：', e)
   }
 }
 
@@ -427,7 +463,9 @@ const AsyncVideo = defineComponent({
     const { getDownloadUrl } = useAlistApi()
 
     onMounted(async () => {
-      if (props.file.thumb) {
+      if (props.file.raw_url) {
+        url.value = props.file.raw_url
+      } else if (props.file.thumb) {
         url.value = props.file.thumb
       } else {
         const downloadUrl = await getDownloadUrl(`${props.currentPath}/${props.file.name}`)
