@@ -12,9 +12,12 @@
   "dependencies": {
     "@nuxt/image": "1.9.0",
     "@unocss/nuxt": "66.1.0-beta.3",
+    "@vueuse/core": "^12.7.0",
     "@vueuse/nuxt": "12.7.0",
     "nuxt": "^3.15.4",
+    "plyr": "^3.7.8",
     "vue": "latest",
+    "vue-easy-lightbox": "^1.19.0",
     "vue-router": "latest",
     "vuetify-nuxt-module": "0.18.3"
   },

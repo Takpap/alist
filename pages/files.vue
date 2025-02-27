@@ -32,77 +32,224 @@
 
     <!-- 文件列表 -->
     <div v-else class="flex-1">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div
-          v-for="file in files"
-          :key="file.name"
-          @click="handleFileClick(file)"
-          class="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-        >
-          <div class="flex items-center space-x-3">
-            <!-- 文件夹图标 -->
-            <div v-if="file.is_dir" class="text-yellow-500">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
-            </div>
-            <!-- 文件图标 -->
-            <div v-else class="text-blue-500">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-            
-            <div class="flex-1 min-w-0">
-              <div class="truncate">{{ file.name }}</div>
-              <div class="text-sm text-gray-500">
-                {{ file.is_dir ? '文件夹' : formatFileSize(file.size) }}
+      <div ref="container" class="h-full overflow-auto">
+        <div v-if="files.length === 0" class="flex items-center justify-center h-full text-gray-600">
+          文件夹为空
+        </div>
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            v-for="file in files"
+            :key="file.name"
+            @click="handleFileClick(file)"
+            class="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+          >
+            <div class="flex items-center space-x-3">
+              <!-- 文件夹图标 -->
+              <div v-if="file.is_dir" class="text-yellow-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+              </div>
+              <!-- 图片预览 -->
+              <div v-else-if="isImage(file)" class="w-12 h-12 flex-shrink-0">
+                <ClientOnly>
+                  <AsyncImage
+                    :file="file"
+                    :current-path="currentPath"
+                    class="w-full h-full object-cover rounded"
+                    @error="handleImageError"
+                  />
+                </ClientOnly>
+              </div>
+              <!-- 视频预览 -->
+              <div v-else-if="isVideo(file)" class="w-12 h-12 flex-shrink-0 relative">
+                <ClientOnly>
+                  <AsyncVideo
+                    :file="file"
+                    :current-path="currentPath"
+                    class="w-full h-full object-cover rounded"
+                  />
+                </ClientOnly>
+                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  </svg>
+                </div>
+              </div>
+              <!-- 其他文件图标 -->
+              <div v-else class="text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              
+              <div class="flex-1 min-w-0">
+                <div class="truncate">{{ file.name }}</div>
+                <div class="text-sm text-gray-500">
+                  {{ file.is_dir ? '文件夹' : formatFileSize(file.size) }}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 图片预览 -->
+    <ClientOnly>
+      <vue-easy-lightbox
+        :visible="!!previewImage"
+        :imgs="previewImage ? [previewImage] : []"
+        :index="0"
+        @hide="closePreview"
+      />
+    </ClientOnly>
+
+    <!-- 视频预览 -->
+    <ClientOnly>
+      <div v-if="previewVideo" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+        <div class="relative w-full max-w-4xl">
+          <button
+            @click="closePreview"
+            class="absolute top-4 right-4 text-white hover:text-gray-300"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div ref="videoPlayer" class="w-full"></div>
+        </div>
+      </div>
+    </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
+import VueEasyLightbox from 'vue-easy-lightbox'
+import { useVirtualList } from '@vueuse/core'
+import { defineComponent, h, ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import type { PropType } from 'vue'
+import { useRouter, useRoute, navigateTo } from '#app'
+
+interface FileItem {
+  name: string
+  size: number
+  is_dir: boolean
+  modified: string
+  sign?: string
+  thumb?: string
+  type: number
+}
+
 const { baseUrl, isConfigured, isEditing } = useAlistConfig()
 const { listFiles, getDownloadUrl, loading, error } = useAlistApi()
 const router = useRouter()
 const currentPath = ref('/')
-const files = ref<any[]>([])
+const files = ref<FileItem[]>([])
+const previewImage = ref<string | null>(null)
+const previewVideo = ref<string | null>(null)
+const videoPlayer = ref<HTMLElement | null>(null)
+const container = ref<HTMLElement | null>(null)
+let player: any = null
 
-// 如果未配置，重定向到首页
-onMounted(async () => {
-  if (!isConfigured.value) {
-    await navigateTo('/', { replace: true })
-    return
-  }
-  await loadFiles()
+console.log('组件初始化', {
+  baseUrl: baseUrl.value,
+  isConfigured: isConfigured.value,
+  isEditing: isEditing.value
 })
+
+// 虚拟滚动优化
+const { list: displayedFiles } = useVirtualList(files, {
+  itemHeight: 80,
+  overscan: 10,
+})
+
+// 在模板中使用的计算属性
+const displayedFileItems = computed(() => displayedFiles.value.map(item => item.data))
 
 // 加载文件列表
 const loadFiles = async () => {
-  const result = await listFiles(currentPath.value)
-  console.log('result', result)
-  if (result) {
-    files.value = result.content
+  try {
+    console.log('开始加载文件列表，路径：', currentPath.value)
+    const result = await listFiles(currentPath.value)
+    console.log('文件列表结果：', result)
+    
+    if (result && result.content) {
+      files.value = result.content
+      console.log('更新文件列表：', files.value.length, '个文件')
+    } else {
+      console.warn('文件列表为空')
+      files.value = []
+    }
+  } catch (e) {
+    console.error('加载文件列表失败：', e)
+    error.value = '加载文件列表失败'
   }
 }
 
+// 文件类型判断
+const isImage = (file: FileItem) => {
+  const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+  return !file.is_dir && imageExts.some(ext => file.name.toLowerCase().endsWith(ext))
+}
+
+const isVideo = (file: FileItem) => {
+  const videoExts = ['.mp4', '.webm', '.ogg', '.m4v', '.mov']
+  return !file.is_dir && videoExts.some(ext => file.name.toLowerCase().endsWith(ext))
+}
+
+// 获取预览URL
+const getPreviewUrl = async (file: FileItem) => {
+  if (file.thumb) return file.thumb
+  if (isImage(file) || isVideo(file)) {
+    return await getDownloadUrl(`${currentPath.value}/${file.name}`)
+  }
+  return ''
+}
+
+// 处理图片加载错误
+const handleImageError = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  img.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+}
+
 // 处理文件点击
-const handleFileClick = async (file: any) => {
-  if (file.is_dir) {
-    currentPath.value = currentPath.value === '/' 
-      ? `/${file.name}`
-      : `${currentPath.value}/${file.name}`
-    await loadFiles()
-  } else {
-    const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
-    if (url) {
-      window.open(url, '_blank')
+const handleFileClick = async (file: FileItem) => {
+  try {
+    console.log('点击文件：', file)
+    if (file.is_dir) {
+      currentPath.value = currentPath.value === '/' 
+        ? `/${file.name}`
+        : `${currentPath.value}/${file.name}`
+      await loadFiles()
+    } else if (isImage(file)) {
+      console.log('预览图片：', file.name)
+      const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
+      if (url) {
+        previewImage.value = url
+      }
+    } else if (isVideo(file)) {
+      console.log('预览视频：', file.name)
+      const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
+      console.log('video url', url)
+      if (url) {
+        previewVideo.value = url
+        nextTick(async () => {
+          if (videoPlayer.value) {
+            await initVideoPlayer()
+          }
+        })
+      }
+    } else {
+      const url = await getDownloadUrl(`${currentPath.value}/${file.name}`)
+      console.log('url', url)
+      if (url) {
+        window.open(url, '_blank')
+      }
     }
+  } catch (e) {
+    console.error('处理文件点击失败：', e)
+    error.value = '处理文件失败'
   }
 }
 
@@ -129,4 +276,182 @@ const goToConfig = () => {
   isEditing.value = true
   return navigateTo('/', { replace: true })
 }
+
+// 关闭预览
+const closePreview = () => {
+  previewImage.value = null
+  previewVideo.value = null
+  if (player) {
+    player.destroy()
+    player = null
+  }
+}
+
+// 视频预览组件
+const initVideoPlayer = async () => {
+  if (process.client && videoPlayer.value && previewVideo.value) {
+    try {
+      // 动态导入 Plyr
+      const [{ default: Plyr }, _] = await Promise.all([
+        import('plyr'),
+        import('plyr/dist/plyr.css')
+      ])
+
+      const video = document.createElement('video')
+      video.src = previewVideo.value
+      video.controls = true
+      videoPlayer.value.innerHTML = ''
+      videoPlayer.value.appendChild(video)
+      
+      player = new Plyr(video, {
+        controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+      })
+    } catch (e) {
+      console.error('加载视频播放器失败：', e)
+    }
+  }
+}
+
+// 如果未配置，重定向到首页
+onMounted(async () => {
+  try {
+    console.log('组件挂载，检查配置状态：', {
+      baseUrl: baseUrl.value,
+      isConfigured: isConfigured.value,
+      isEditing: isEditing.value,
+      loading: loading.value,
+      error: error.value
+    })
+    
+    if (!isConfigured.value) {
+      console.log('未配置，重定向到首页')
+      await navigateTo('/', { replace: true })
+      return
+    }
+    
+    console.log('开始加载文件列表')
+    await loadFiles()
+    console.log('文件列表加载完成')
+  } catch (e) {
+    console.error('组件挂载失败：', e)
+    error.value = '加载失败'
+  }
+})
+
+// 组件卸载时清理
+onUnmounted(() => {
+  if (player) {
+    player.destroy()
+    player = null
+  }
+})
+
+// 异步图片组件
+const AsyncImage = defineComponent({
+  props: {
+    file: {
+      type: Object as PropType<FileItem>,
+      required: true
+    },
+    currentPath: {
+      type: String,
+      required: true
+    }
+  },
+  setup(props) {
+    const url = ref('')
+    const { getDownloadUrl } = useAlistApi()
+    const loading = ref(true)
+    const error = ref(false)
+
+    onMounted(async () => {
+      try {
+        if (props.file.thumb) {
+          console.log('使用缩略图：', props.file.thumb)
+          url.value = props.file.thumb
+        } else {
+          console.log('获取下载链接：', `${props.currentPath}/${props.file.name}`)
+          const downloadUrl = await getDownloadUrl(`${props.currentPath}/${props.file.name}`)
+          if (downloadUrl) {
+            url.value = downloadUrl
+          }
+        }
+      } catch (e) {
+        console.error('加载图片失败：', e)
+        error.value = true
+      } finally {
+        loading.value = false
+      }
+    })
+
+    return () => h('div', { class: 'relative w-full h-full' }, [
+      loading.value && h('div', { class: 'absolute inset-0 flex items-center justify-center bg-gray-100 rounded' }, [
+        h('div', { class: 'text-gray-400 text-sm' }, '加载中...')
+      ]),
+      error.value && h('div', { class: 'absolute inset-0 flex items-center justify-center bg-gray-100 rounded' }, [
+        h('div', { class: 'text-red-400 text-sm' }, '加载失败')
+      ]),
+      h('img', {
+        src: url.value || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        class: 'w-full h-full object-cover rounded',
+        style: {
+          opacity: loading.value || error.value ? 0 : 1
+        },
+        loading: 'lazy',
+        onLoad: () => {
+          loading.value = false
+        },
+        onError: () => {
+          loading.value = false
+          error.value = true
+        }
+      })
+    ])
+  }
+})
+
+// 异步视频组件
+const AsyncVideo = defineComponent({
+  props: {
+    file: {
+      type: Object as PropType<FileItem>,
+      required: true
+    },
+    currentPath: {
+      type: String,
+      required: true
+    }
+  },
+  setup(props) {
+    const url = ref('')
+    const { getDownloadUrl } = useAlistApi()
+
+    onMounted(async () => {
+      if (props.file.thumb) {
+        url.value = props.file.thumb
+      } else {
+        const downloadUrl = await getDownloadUrl(`${props.currentPath}/${props.file.name}`)
+        if (downloadUrl) {
+          url.value = downloadUrl
+        }
+      }
+    })
+
+    return () => h('video', {
+      src: url.value,
+      preload: 'metadata'
+    })
+  }
+})
+
+// 客户端专用组件
+const ClientOnly = defineComponent({
+  setup(_, { slots }) {
+    const isMounted = ref(false)
+    onMounted(() => {
+      isMounted.value = true
+    })
+    return () => isMounted.value && slots.default ? slots.default() : null
+  }
+})
 </script> 
