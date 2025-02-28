@@ -54,7 +54,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
+    <div v-if="loading && !files.length" class="flex items-center justify-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
     </div>
 
@@ -108,12 +108,13 @@
                 </svg>
               </div>
               <img
-                :src="file.thumb || ''"
+                :src="file.thumb || file.raw_url || ''"
                 :data-src="file.name"
                 class="w-full rounded-lg cursor-zoom-in object-cover relative z-10"
                 loading="lazy"
                 alt=""
                 @load="onImageLoad($event, file)"
+                @error="onImageError($event, file)"
                 :title="`${file.name}\n${formatFileSize(file.size)}`"
               />
             </div>
@@ -157,9 +158,12 @@
       <div
         v-if="hasMore"
         ref="loadMoreTrigger"
-        class="py-8 flex items-center justify-center"
+        class="py-4 flex items-center justify-center"
       >
-        <div v-if="loading" class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div v-if="loading" class="flex items-center space-x-2">
+          <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+          <span class="text-sm text-gray-600">Loading more...</span>
+        </div>
       </div>
     </div>
 
@@ -195,11 +199,13 @@
                 </svg>
               </div>
               <img
-                :src="file.thumb || ''"
+                :src="file.thumb || file.raw_url || ''"
                 :data-src="file.name"
                 class="w-full h-full object-cover rounded-lg cursor-zoom-in relative z-10"
                 loading="lazy"
                 alt=""
+                @load="onImageLoad($event, file)"
+                @error="onImageError($event, file)"
                 :title="`${file.name}\n${formatFileSize(file.size)}`"
               />
             </div>
@@ -252,9 +258,12 @@
       <div
         v-if="hasMore"
         ref="loadMoreTrigger"
-        class="py-8 flex items-center justify-center"
+        class="py-4 flex items-center justify-center"
       >
-        <div v-if="loading" class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div v-if="loading" class="flex items-center space-x-2">
+          <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+          <span class="text-sm text-gray-600">Loading more...</span>
+        </div>
       </div>
     </div>
 
@@ -368,5 +377,16 @@ const onImageLoad = (event: Event, file: FileItem) => {
   if (loadingEl) {
     loadingEl.classList.add('hidden')
   }
+}
+
+const onImageError = (event: Event, file: FileItem) => {
+  const img = event.target as HTMLImageElement
+  // 如果加载失败，显示加载动画
+  const loadingEl = img.parentElement?.querySelector('.animate-pulse')
+  if (loadingEl) {
+    loadingEl.classList.remove('hidden')
+  }
+  // 记录错误
+  console.error('图片加载失败：', file.name, img.src)
 }
 </script> 

@@ -1,3 +1,5 @@
+import { convertHeicToJpeg } from '~/utils/file'
+
 interface AlistResponse<T> {
   code: number
   message: string
@@ -24,6 +26,7 @@ interface FsListResponse {
 }
 
 interface FsGetResponse {
+  name: any
   url: string
   raw_url?: string
 }
@@ -37,6 +40,39 @@ export const useAlistApi = () => {
     'Authorization': token.value ? `Bearer ${token.value}` : '',
     'Content-Type': 'application/json',
   }))
+
+  // 获取文件详情
+  const getFileDetail = async (path: string): Promise<string | null> => {
+    try {
+      const response = await $fetch<AlistResponse<FsGetResponse>>(`${baseUrl.value}/api/fs/get`, {
+        method: 'POST',
+        headers: headers.value,
+        body: {
+          path,
+          password: '',
+        },
+      })
+
+      if (response.code !== 200) {
+        throw new Error(response.message)
+      }
+
+      let url = response.data.raw_url || response.data.url
+
+
+      // 如果是 HEIC 图片，转换为 JPG
+      if (response.data.name.toLowerCase().endsWith('.heic')) {
+        console.time('转换 HEIC 图片耗时...')
+        url = await convertHeicToJpeg(url)
+        console.timeEnd('转换 HEIC 图片耗时...')
+      }
+
+      return url
+    } catch (e) {
+      console.error('获取文件详情失败：', e)
+      return null
+    }
+  }
 
   const listFiles = async (path: string = '/', page: number = 1, per_page: number = 100) => {
     loading.value = true
@@ -70,6 +106,26 @@ export const useAlistApi = () => {
 
       if (response.code !== 200) {
         throw new Error(response.message)
+      }
+
+      // 处理图片文件
+      if (response.data.content) {
+        const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif']
+        const promises = response.data.content.map(async (file) => {
+          // 如果是图片文件
+          if (!file.is_dir && imageExts.some(ext => file.name.toLowerCase().endsWith(ext))) {
+            // 如果没有缩略图和 raw_url，获取文件详情
+            if (!file.thumb && !file.raw_url) {
+              const url = await getFileDetail(`${path}/${file.name}`)
+              if (url) {
+                file.raw_url = url
+              }
+            }
+          }
+          return file
+        })
+        response.data.content = await Promise.all(promises)
+        console.log('处理后的文件列表：', response.data.content)
       }
 
       return response.data

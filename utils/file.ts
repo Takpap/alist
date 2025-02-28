@@ -27,3 +27,59 @@ export const convertToProxyUrl = (url: string) => {
     return url
   }
 } 
+
+// 处理 HEIC 图片转换
+export const convertHeicToJpeg = async (url: string) => {
+  if (!process.client) return url
+
+  try {
+    console.log('Converting HEIC image...')
+    // 动态导入 heic2any
+    const { default: heic2any } = await import('heic2any')
+    
+    // 使用代理 URL
+    const proxyUrl = convertToProxyUrl(url)
+    console.log('Using proxy URL for HEIC conversion:', proxyUrl)
+    
+    // 获取 HEIC 图片数据
+    const response = await fetch(proxyUrl, {
+      mode: 'cors',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'image/heic,image/heif,image/*'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch HEIC image: ${response.status} ${response.statusText}`)
+    }
+    
+    const blob = await response.blob()
+    console.log('HEIC blob received, size:', blob.size)
+    
+    // 转换为 JPEG
+    const jpegBlob = await heic2any({
+      blob,
+      toType: 'image/jpeg',
+      quality: 0.8
+    }) as Blob
+    
+    console.log('HEIC conversion successful, new size:', jpegBlob.size)
+    
+    // 创建预览 URL
+    const previewUrl = URL.createObjectURL(jpegBlob)
+    
+    // 在组件卸载时清理 URL
+    onUnmounted(() => {
+      if (previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    })
+    
+    return previewUrl
+  } catch (error) {
+    console.error('HEIC conversion failed:', error)
+    // 转换失败时尝试使用代理 URL
+    return convertToProxyUrl(url)
+  }
+}
