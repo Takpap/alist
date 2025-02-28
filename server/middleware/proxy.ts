@@ -8,15 +8,13 @@ export default defineEventHandler(async (event) => {
     return
   }
 
-  // 从路径中提取域名
-  // 路径格式: /proxy/domain.com/path
-  const match = url.match(/^\/proxy\/([^\/]+)(.*)/)
+  const match = url.match(/\/proxy\/(.*)/)
   if (!match) {
     return
   }
 
-  const [_, domain, remainingPath] = match
-  const target = `https://${domain}${remainingPath}`
+  const [_, originalUrl] = match
+  const host = new URL(originalUrl).host
 
   try {
     // 设置响应头
@@ -32,9 +30,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // 代理请求
-    return await proxyRequest(event, target, {
+    return await proxyRequest(event, originalUrl, {
       headers: {
-        host: domain
+        host: host
       }
     })
   } catch (error: any) {
