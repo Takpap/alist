@@ -21,7 +21,6 @@
 
 <script setup lang="ts">
 const { isEditing } = useAlistConfig()
-const { navigateTo } = useRouter()
 
 const goToConfig = () => {
   isEditing.value = true

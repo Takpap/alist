@@ -38,7 +38,7 @@ export const useAlistApi = () => {
     'Content-Type': 'application/json',
   }))
 
-  const listFiles = async (path: string = '/') => {
+  const listFiles = async (path: string = '/', page: number = 1, per_page: number = 100) => {
     loading.value = true
     error.value = null
     
@@ -48,8 +48,8 @@ export const useAlistApi = () => {
         body: {
           path,
           password: '',
-          page: 1,
-          per_page: 100,
+          page,
+          per_page,
           refresh: false,
         },
       })
@@ -60,8 +60,8 @@ export const useAlistApi = () => {
         body: {
           path,
           password: '',
-          page: 1,
-          per_page: 100,
+          page,
+          per_page,
           refresh: false,
         },
       })

@@ -74,163 +74,187 @@
     <!-- Grid View -->
     <div
       v-else-if="layout === 'grid'"
-      class="columns-2 sm:columns-3 md:columns-4 lg:columns-6 xl:columns-8 2xl:columns-10 gap-4 space-y-4"
-      :style="{
-        'columns': gridColumns < 10 ? gridColumns : undefined
-      }"
+      class="space-y-4"
     >
       <div
-        v-for="file in files"
-        :key="file.name"
-        class="break-inside-avoid-column mb-4 group rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-        @click="onFileClick(file)"
+        class="columns-2 sm:columns-3 md:columns-4 lg:columns-6 xl:columns-8 2xl:columns-10 gap-4 space-y-4"
+        :style="{
+          'columns': gridColumns < 10 ? gridColumns : undefined
+        }"
       >
-        <!-- Folder -->
-        <div v-if="file.is_dir" class="flex flex-col items-center p-4">
-          <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
-            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-          </div>
-          <div class="mt-2 text-sm text-center truncate w-full" :title="file.name">{{ file.name }}</div>
-        </div>
-
-        <!-- Image -->
-        <div v-else-if="isImage(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
-          <div class="relative w-full">
-            <!-- Loading animation -->
-            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
-              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <div
+          v-for="file in files"
+          :key="file.name"
+          class="break-inside-avoid-column mb-4 group rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+          @click="onFileClick(file)"
+        >
+          <!-- Folder -->
+          <div v-if="file.is_dir" class="flex flex-col items-center p-4">
+            <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
               </svg>
             </div>
-            <img
-              :src="file.thumb || ''"
-              :data-src="file.name"
-              class="w-full rounded-lg cursor-zoom-in object-cover relative z-10"
-              loading="lazy"
-              alt=""
-              @load="onImageLoad($event, file)"
-              :title="`${file.name}\n${formatFileSize(file.size)}`"
-            />
+            <div class="mt-2 text-sm text-center truncate w-full" :title="file.name">{{ file.name }}</div>
           </div>
-          <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
-        </div>
 
-        <!-- Video -->
-        <div v-else-if="isVideo(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
-          <div class="relative w-full aspect-video">
-            <img
-              :src="file.thumb || ''"
-              class="w-full h-full object-cover rounded-lg"
-              loading="lazy"
-              alt=""
-              :title="`${file.name}\n${formatFileSize(file.size)}`"
-            />
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="p-2 rounded-full bg-black/50">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+          <!-- Image -->
+          <div v-else-if="isImage(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
+            <div class="relative w-full">
+              <!-- Loading animation -->
+              <div class="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
+              <img
+                :src="file.thumb || ''"
+                :data-src="file.name"
+                class="w-full rounded-lg cursor-zoom-in object-cover relative z-10"
+                loading="lazy"
+                alt=""
+                @load="onImageLoad($event, file)"
+                :title="`${file.name}\n${formatFileSize(file.size)}`"
+              />
             </div>
+            <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
           </div>
-          <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
-        </div>
 
-        <!-- Other Files -->
-        <div v-else class="flex flex-col items-center p-4">
-          <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
-            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+          <!-- Video -->
+          <div v-else-if="isVideo(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
+            <div class="relative w-full aspect-video">
+              <img
+                :src="file.thumb || ''"
+                class="w-full h-full object-cover rounded-lg"
+                loading="lazy"
+                alt=""
+                :title="`${file.name}\n${formatFileSize(file.size)}`"
+              />
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="p-2 rounded-full bg-black/50">
+                  <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
           </div>
-          <div class="mt-2 text-sm text-center truncate w-full" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+
+          <!-- Other Files -->
+          <div v-else class="flex flex-col items-center p-4">
+            <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="mt-2 text-sm text-center truncate w-full" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+          </div>
         </div>
+      </div>
+
+      <!-- Infinite Scroll Trigger -->
+      <div
+        v-if="hasMore"
+        ref="loadMoreTrigger"
+        class="py-8 flex items-center justify-center"
+      >
+        <div v-if="loading" class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     </div>
 
     <!-- List View -->
-    <div v-else class="divide-y divide-gray-200 -mx-4">
-      <div
-        v-for="file in files"
-        :key="file.name"
-        class="flex items-center py-2 px-4 hover:bg-gray-50 cursor-pointer transition-colors"
-        @click="onFileClick(file)"
-      >
-        <!-- Folder -->
-        <div v-if="file.is_dir" class="flex items-center flex-1 min-w-0">
-          <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-          </div>
-          <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate" :title="file.name">{{ file.name }}</div>
-            <div class="text-xs text-gray-500">{{ file.modified }}</div>
-          </div>
-        </div>
-
-        <!-- Image -->
-        <div v-else-if="isImage(file)" class="flex items-center flex-1 min-w-0">
-          <div class="w-12 h-12 flex-shrink-0 relative">
-            <!-- Loading animation -->
-            <div class="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse rounded-lg">
-              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    <div v-else class="space-y-4">
+      <div class="divide-y divide-gray-200 -mx-4">
+        <div
+          v-for="file in files"
+          :key="file.name"
+          class="flex items-center py-2 px-4 hover:bg-gray-50 cursor-pointer transition-colors"
+          @click="onFileClick(file)"
+        >
+          <!-- Folder -->
+          <div v-if="file.is_dir" class="flex items-center flex-1 min-w-0">
+            <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
               </svg>
             </div>
-            <img
-              :src="file.thumb || ''"
-              :data-src="file.name"
-              class="w-full h-full object-cover rounded-lg cursor-zoom-in relative z-10"
-              loading="lazy"
-              alt=""
-              :title="`${file.name}\n${formatFileSize(file.size)}`"
-            />
-          </div>
-          <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
-            <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
-          </div>
-        </div>
-
-        <!-- Video -->
-        <div v-else-if="isVideo(file)" class="flex items-center flex-1 min-w-0">
-          <div class="relative w-12 h-12 flex-shrink-0">
-            <img
-              :src="file.thumb || ''"
-              class="w-full h-full object-cover rounded-lg"
-              loading="lazy"
-              alt=""
-              :title="`${file.name}\n${formatFileSize(file.size)}`"
-            />
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="p-1 rounded-full bg-black/50">
-                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                </svg>
-              </div>
+            <div class="ml-4 flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-900 truncate" :title="file.name">{{ file.name }}</div>
+              <div class="text-xs text-gray-500">{{ file.modified }}</div>
             </div>
           </div>
-          <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
-            <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
-          </div>
-        </div>
 
-        <!-- Other Files -->
-        <div v-else class="flex items-center flex-1 min-w-0">
-          <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+          <!-- Image -->
+          <div v-else-if="isImage(file)" class="flex items-center flex-1 min-w-0">
+            <div class="w-12 h-12 flex-shrink-0 relative">
+              <!-- Loading animation -->
+              <div class="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse rounded-lg">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <img
+                :src="file.thumb || ''"
+                :data-src="file.name"
+                class="w-full h-full object-cover rounded-lg cursor-zoom-in relative z-10"
+                loading="lazy"
+                alt=""
+                :title="`${file.name}\n${formatFileSize(file.size)}`"
+              />
+            </div>
+            <div class="ml-4 flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+              <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
+            </div>
           </div>
-          <div class="ml-4 flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
-            <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
+
+          <!-- Video -->
+          <div v-else-if="isVideo(file)" class="flex items-center flex-1 min-w-0">
+            <div class="relative w-12 h-12 flex-shrink-0">
+              <img
+                :src="file.thumb || ''"
+                class="w-full h-full object-cover rounded-lg"
+                loading="lazy"
+                alt=""
+                :title="`${file.name}\n${formatFileSize(file.size)}`"
+              />
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="p-1 rounded-full bg-black/50">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="ml-4 flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+              <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
+            </div>
+          </div>
+
+          <!-- Other Files -->
+          <div v-else class="flex items-center flex-1 min-w-0">
+            <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="ml-4 flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-900 truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+              <div class="text-xs text-gray-500">{{ file.modified }} · {{ formatFileSize(file.size) }}</div>
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- Infinite Scroll Trigger -->
+      <div
+        v-if="hasMore"
+        ref="loadMoreTrigger"
+        class="py-8 flex items-center justify-center"
+      >
+        <div v-if="loading" class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     </div>
 
@@ -258,7 +282,9 @@ const {
   navigateBack,
   navigateTo,
   pathSegments,
-  getPathUpTo
+  getPathUpTo,
+  hasMore,
+  loadMore
 } = useFileList()
 
 const {
@@ -274,6 +300,52 @@ const {
   handleFileClick,
   closePreview
 } = usePreview()
+
+// 滚动加载相关
+const loadMoreObserver = ref<IntersectionObserver | null>(null)
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+
+// 设置无限滚动观察器
+const setupInfiniteScroll = () => {
+  if (loadMoreObserver.value) {
+    loadMoreObserver.value.disconnect()
+  }
+
+  loadMoreObserver.value = new IntersectionObserver(async (entries) => {
+    const target = entries[0]
+    if (target.isIntersecting && !loading.value && hasMore.value) {
+      await loadMore()
+      // 加载完成后重新设置观察器
+      nextTick(() => {
+        setupInfiniteScroll()
+      })
+    }
+  }, {
+    rootMargin: '100px', // 提前100px触发加载
+    threshold: 0.1 // 当目标元素出现10%时触发
+  })
+
+  if (loadMoreTrigger.value) {
+    loadMoreObserver.value.observe(loadMoreTrigger.value)
+  }
+}
+
+// 监听文件列表变化，重新设置无限滚动
+watch([files, hasMore], () => {
+  nextTick(() => {
+    setupInfiniteScroll()
+  })
+})
+
+onMounted(() => {
+  setupInfiniteScroll()
+})
+
+onUnmounted(() => {
+  if (loadMoreObserver.value) {
+    loadMoreObserver.value.disconnect()
+  }
+})
 
 const onFileClick = async (file: FileItem) => {
   // 关闭之前的预览
