@@ -21,6 +21,12 @@
       </div>
     </div>
     <div ref="observer" class="observer"></div>
+    
+    <!-- 添加底部加载动画 -->
+    <div v-if="isLoading" class="loading-more-container">
+      <div class="loading-more-spinner"></div>
+      <span class="loading-text">加载中...</span>
+    </div>
   </div>
 </template>
 
@@ -32,6 +38,7 @@ const observer = ref(null)
 const images = ref([])
 const columnCount = ref(3) // 设置默认列数
 const columnHeights = ref([])
+const isLoading = ref(false) // 添加加载状态
 
 // 初始化列高度数组
 const initColumnHeights = () => {
@@ -61,11 +68,11 @@ const generateImages = (startIndex, count = 10) => {
       style: {
         position: 'absolute',
         width: '300px',
-        left: '0px',
-        top: '0px',
+        left: '50%',
+        bottom: '0px',
         opacity: '0',
         transform: 'translateY(50px)',
-        transition: 'opacity 0.5s, transform 0.5s, top 0.5s, left 0.5s'
+        transition: 'opacity 0.5s, transform 0.5s, left 0.5s'
       }
     })
   }
@@ -130,9 +137,16 @@ const createObserver = () => {
 }
 
 // 加载更多图片
-const loadMoreImages = () => {
+const loadMoreImages = async () => {
+  if (isLoading.value) return
+  isLoading.value = true
+  
+  // 模拟网络延迟
+  await new Promise(resolve => setTimeout(resolve, 800))
+  
   const newImages = generateImages(images.value.length)
   images.value.push(...newImages)
+  isLoading.value = false
 }
 
 // 处理窗口大小变化
@@ -201,7 +215,7 @@ onMounted(() => {
 
 .image-item img.hidden {
   visibility: hidden;
-  height: 0;
+  height: 200px;
 }
 
 .loading-placeholder,
@@ -246,5 +260,35 @@ onMounted(() => {
   height: 20px;
   position: absolute;
   bottom: 0;
+}
+
+/* 添加底部加载动画样式 */
+.loading-more-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loading-more-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #666;
 }
 </style>
