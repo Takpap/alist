@@ -73,7 +73,7 @@ export const useFileList = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const page = ref(1)
-  const perPage = ref(10)
+  const perPage = ref(50)
   const hasMore = ref(false)
   const total = ref(0)
   

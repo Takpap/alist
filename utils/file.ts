@@ -28,14 +28,24 @@ export const convertToProxyUrl = (url: string) => {
   }
 } 
 
+// 缓存转换结果
+const heicCache = new Map<string, string>()
+
 // 处理 HEIC 图片转换
 export const convertHeicToJpeg = async (url: string) => {
-  if (!process.client) return url
+  // 确保只在客户端执行
+  if (typeof window === 'undefined') {
+    console.log('Running on server, skipping HEIC conversion')
+    return url
+  }
 
   try {
+    // 检查缓存
+    if (heicCache.has(url)) {
+      return heicCache.get(url)!
+    }
+
     console.log('Converting HEIC image...')
-    // 动态导入 heic2any
-    const { default: heic2any } = await import('heic2any')
     
     // 使用代理 URL
     const proxyUrl = convertToProxyUrl(url)
@@ -56,27 +66,53 @@ export const convertHeicToJpeg = async (url: string) => {
     
     const blob = await response.blob()
     console.log('HEIC blob received, size:', blob.size)
-    
-    // 转换为 JPEG
-    const jpegBlob = await heic2any({
-      blob,
-      toType: 'image/jpeg',
-      quality: 0.8
-    }) as Blob
-    
-    console.log('HEIC conversion successful, new size:', jpegBlob.size)
-    
-    // 创建预览 URL
-    const previewUrl = URL.createObjectURL(jpegBlob)
-    
-    // 在组件卸载时清理 URL
-    onUnmounted(() => {
-      if (previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl)
+
+    // 动态导入 heic2any
+    const { default: heic2any } = await import('heic2any')
+
+    // 使用 requestIdleCallback 在空闲时间处理转换
+    const result = await new Promise<string>((resolve, reject) => {
+      const processConversion = async () => {
+        try {
+          console.time('HEIC conversion')
+          const jpegBlob = await heic2any({
+            blob,
+            toType: 'image/jpeg',
+            quality: 0.3
+          }) as Blob
+          console.timeEnd('HEIC conversion')
+
+          const previewUrl = URL.createObjectURL(jpegBlob)
+          // 缓存结果
+          heicCache.set(url, previewUrl)
+          resolve(previewUrl)
+        } catch (error) {
+          reject(error)
+        }
+      }
+
+      // 使用 requestIdleCallback 在浏览器空闲时执行转换
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => {
+          processConversion()
+        }, { timeout: 5000 }) // 设置超时以确保最终会执行
+      } else {
+        // 降级为 setTimeout
+        setTimeout(processConversion, 0)
       }
     })
-    
-    return previewUrl
+
+    // 在组件卸载时清理 URL
+    if (typeof onUnmounted === 'function') {
+      onUnmounted(() => {
+        if (result.startsWith('blob:')) {
+          URL.revokeObjectURL(result)
+          heicCache.delete(url)
+        }
+      })
+    }
+
+    return result
   } catch (error) {
     console.error('HEIC conversion failed:', error)
     // 转换失败时尝试使用代理 URL

@@ -1,5 +1,3 @@
-import { createProxyMiddleware } from 'http-proxy-middleware'
-
 export default defineEventHandler(async (event) => {
   const req = event.node.req
   const url = event.node.req.url

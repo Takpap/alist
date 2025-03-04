@@ -74,83 +74,87 @@
     <!-- Grid View -->
     <div
       v-else-if="layout === 'grid'"
-      class="space-y-4"
+      class="relative"
+      ref="gridContainer"
     >
       <div
-        class="columns-2 sm:columns-3 md:columns-4 lg:columns-6 xl:columns-8 2xl:columns-10 gap-4 space-y-4"
-        :style="{
-          'columns': gridColumns < 10 ? gridColumns : undefined
+        v-for="(file, index) in files"
+        :key="file.name"
+        class="group rounded-lg hover:bg-gray-50 cursor-pointer transition-colors absolute"
+        :style="file.style || {
+          position: 'absolute',
+          width: `${calculateColumnWidth()}px`,
+          opacity: '0',
+          transform: 'translateY(50px)',
+          transition: 'all 0.5s ease'
         }"
+        @click="onFileClick(file)"
       >
-        <div
-          v-for="file in files"
-          :key="file.name"
-          class="break-inside-avoid-column mb-4 group rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-          @click="onFileClick(file)"
-        >
-          <!-- Folder -->
-          <div v-if="file.is_dir" class="flex flex-col items-center p-4">
-            <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
-              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
-            </div>
-            <div class="mt-2 text-sm text-center truncate w-full" :title="file.name">{{ file.name }}</div>
+        <!-- Folder -->
+        <div v-if="file.is_dir" class="flex flex-col items-center p-4">
+          <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
+            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
           </div>
+          <div class="mt-2 text-sm text-center truncate w-full" :title="file.name">{{ file.name }}</div>
+        </div>
 
-          <!-- Image -->
-          <div v-else-if="isImage(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
-            <div class="relative w-full">
-              <!-- Loading animation -->
-              <div class="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
-                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <!-- Image -->
+        <div v-else-if="isImage(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
+          <div class="relative w-full">
+            <!-- Loading animation -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 animate-pulse">
+              <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <div v-if="file.name.toLowerCase().endsWith('.heic')" class="text-xs text-gray-500">
+                Converting HEIC...
+              </div>
+            </div>
+            <img
+              :src="file.thumb || file.raw_url || ''"
+              :data-src="file.name"
+              class="w-full rounded-t-lg cursor-zoom-in object-cover relative z-10"
+              loading="lazy"
+              alt=""
+              @load="onImageLoad($event, file)"
+              @error="onImageError($event, file)"
+              :title="`${file.name}\n${formatFileSize(file.size)}`"
+            />
+          </div>
+          <div class="p-3 text-sm truncate bg-white" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+        </div>
+
+        <!-- Video -->
+        <div v-else-if="isVideo(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
+          <div class="relative w-full aspect-video">
+            <img
+              :src="file.thumb || ''"
+              class="w-full h-full object-cover rounded-t-lg"
+              loading="lazy"
+              alt=""
+              :title="`${file.name}\n${formatFileSize(file.size)}`"
+            />
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="p-2 rounded-full bg-black/50">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                 </svg>
               </div>
-              <img
-                :src="file.thumb || file.raw_url || ''"
-                :data-src="file.name"
-                class="w-full rounded-lg cursor-zoom-in object-cover relative z-10"
-                loading="lazy"
-                alt=""
-                @load="onImageLoad($event, file)"
-                @error="onImageError($event, file)"
-                :title="`${file.name}\n${formatFileSize(file.size)}`"
-              />
             </div>
-            <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
           </div>
+          <div class="p-3 text-sm truncate bg-white" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+        </div>
 
-          <!-- Video -->
-          <div v-else-if="isVideo(file)" class="flex flex-col bg-white rounded-lg overflow-hidden">
-            <div class="relative w-full aspect-video">
-              <img
-                :src="file.thumb || ''"
-                class="w-full h-full object-cover rounded-lg"
-                loading="lazy"
-                alt=""
-                :title="`${file.name}\n${formatFileSize(file.size)}`"
-              />
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="p-2 rounded-full bg-black/50">
-                  <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div class="p-2 text-sm truncate" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
+        <!-- Other Files -->
+        <div v-else class="flex flex-col items-center p-4">
+          <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
+            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
           </div>
-
-          <!-- Other Files -->
-          <div v-else class="flex flex-col items-center p-4">
-            <div class="relative w-full aspect-square flex items-center justify-center bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
-              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="mt-2 text-sm text-center truncate w-full" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
-          </div>
+          <div class="mt-3 text-sm truncate w-full" :title="`${file.name}\n${formatFileSize(file.size)}`">{{ file.name }}</div>
         </div>
       </div>
 
@@ -158,11 +162,14 @@
       <div
         v-if="hasMore"
         ref="loadMoreTrigger"
-        class="py-4 flex items-center justify-center"
+        class="absolute left-0 bottom-0 w-full"
+        style="height: 20px;"
       >
-        <div v-if="loading" class="flex items-center space-x-2">
-          <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
-          <span class="text-sm text-gray-600">Loading more...</span>
+        <div v-if="loading || isLoadingMore" class="flex items-center justify-center py-4">
+          <div class="flex items-center space-x-2">
+            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+            <span class="text-sm text-gray-600">Loading more...</span>
+          </div>
         </div>
       </div>
     </div>
@@ -193,10 +200,13 @@
           <div v-else-if="isImage(file)" class="flex items-center flex-1 min-w-0">
             <div class="w-12 h-12 flex-shrink-0 relative">
               <!-- Loading animation -->
-              <div class="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse rounded-lg">
-                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 animate-pulse">
+                <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
+                <div v-if="file.name.toLowerCase().endsWith('.heic')" class="text-xs text-gray-500">
+                  Converting HEIC...
+                </div>
               </div>
               <img
                 :src="file.thumb || file.raw_url || ''"
@@ -313,6 +323,7 @@ const {
 // 滚动加载相关
 const loadMoreObserver = ref<IntersectionObserver | null>(null)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
+const isLoadingMore = ref(false)
 
 // 设置无限滚动观察器
 const setupInfiniteScroll = () => {
@@ -322,16 +333,18 @@ const setupInfiniteScroll = () => {
 
   loadMoreObserver.value = new IntersectionObserver(async (entries) => {
     const target = entries[0]
-    if (target.isIntersecting && !loading.value && hasMore.value) {
-      await loadMore()
-      // 加载完成后重新设置观察器
-      nextTick(() => {
-        setupInfiniteScroll()
-      })
+    if (target.isIntersecting && !loading.value && !isLoadingMore.value && hasMore.value) {
+      try {
+        isLoadingMore.value = true
+        await loadMore()
+      } finally {
+        isLoadingMore.value = false
+      }
     }
   }, {
-    rootMargin: '100px', // 提前100px触发加载
-    threshold: 0.1 // 当目标元素出现10%时触发
+    root: null,
+    rootMargin: '100px',
+    threshold: 0.1
   })
 
   if (loadMoreTrigger.value) {
@@ -339,11 +352,18 @@ const setupInfiniteScroll = () => {
   }
 }
 
-// 监听文件列表变化，重新设置无限滚动
+// 监听文件列表变化
 watch([files, hasMore], () => {
-  nextTick(() => {
-    setupInfiniteScroll()
-  })
+  if (hasMore.value) {
+    nextTick(() => {
+      setupInfiniteScroll()
+    })
+  } else {
+    // 如果没有更多数据，断开观察器
+    if (loadMoreObserver.value) {
+      loadMoreObserver.value.disconnect()
+    }
+  }
 })
 
 onMounted(() => {
@@ -370,14 +390,166 @@ const onFileClick = async (file: FileItem) => {
   // 其他类型的文件会由 handleFileClick 自动处理预览状态
 }
 
-// 添加图片加载处理函数
+// 添加瀑布流相关的响应式变量和方法
+const gridContainer = ref<HTMLElement | null>(null)
+const columnGap = ref(20)
+const columnHeights = ref<number[]>([])
+
+// 计算列宽度
+const calculateColumnWidth = () => {
+  if (!gridContainer.value) return 240 // 默认宽度
+
+  const containerWidth = gridContainer.value.clientWidth
+  const totalGap = columnGap.value * (gridColumns.value - 1)
+  return (containerWidth - totalGap) / gridColumns.value
+}
+
+// 初始化列高度数组
+const initColumnHeights = () => {
+  columnHeights.value = new Array(gridColumns.value).fill(0)
+}
+
+// 计算图片位置
+const calculatePosition = (file: FileItem, height: number) => {
+  const minHeight = Math.min(...columnHeights.value)
+  const columnIndex = columnHeights.value.indexOf(minHeight)
+  const width = calculateColumnWidth()
+  
+  // 添加文字区域的高度（padding + 文字行高）
+  const captionHeight = 40 // 2rem padding + 文字行高
+
+  file.style = {
+    position: 'absolute',
+    width: `${width}px`,
+    left: `${columnIndex * (width + columnGap.value)}px`,
+    top: `${minHeight}px`,
+    opacity: '1',
+    transform: 'translateY(0)',
+    transition: 'all 0.5s ease'
+  }
+  
+  // 在计算下一个位置时加上文字区域的高度
+  columnHeights.value[columnIndex] += height + captionHeight + columnGap.value
+  updateContainerHeight()
+}
+
+// 更新容器高度
+const updateContainerHeight = () => {
+  if (gridContainer.value) {
+    const maxHeight = Math.max(...columnHeights.value)
+    gridContainer.value.style.height = `${maxHeight + 50}px`
+  }
+}
+
+// 修改图片加载处理函数
 const onImageLoad = (event: Event, file: FileItem) => {
   const img = event.target as HTMLImageElement
   const loadingEl = img.parentElement?.querySelector('.animate-pulse')
   if (loadingEl) {
     loadingEl.classList.add('hidden')
   }
+  
+  // 计算图片位置
+  if (layout.value === 'grid') {
+    const aspectRatio = img.naturalWidth / img.naturalHeight
+    const width = calculateColumnWidth()
+    const height = width / aspectRatio
+    calculatePosition(file, height)
+  }
 }
+
+// 处理窗口大小变化
+const handleResize = () => {
+  if (!process.client || layout.value !== 'grid') return
+  
+  // 重新计算所有文件的位置
+  columnHeights.value = new Array(gridColumns.value).fill(0)
+  files.value.forEach(file => {
+    if (isImage(file)) {
+      const img = document.querySelector(`img[data-src="${file.name}"]`) as HTMLImageElement
+      if (img && img.complete) {
+        const aspectRatio = img.naturalWidth / img.naturalHeight
+        const width = calculateColumnWidth()
+        const height = width / aspectRatio
+        calculatePosition(file, height)
+      }
+    } else {
+      // 对于非图片文件，使用固定高度加上文字区域高度
+      calculatePosition(file, 200) // 默认高度
+    }
+  })
+}
+
+// 监听列数变化
+watch(gridColumns, () => {
+  if (layout.value === 'grid') {
+    nextTick(() => {
+      initColumnHeights()
+      handleResize()
+    })
+  }
+})
+
+// 监听布局变化
+watch(layout, (newLayout) => {
+  if (newLayout === 'grid') {
+    nextTick(() => {
+      initColumnHeights()
+      // 重新计算所有文件的位置
+      files.value.forEach(file => {
+        if (isImage(file)) {
+          const img = document.querySelector(`img[data-src="${file.name}"]`) as HTMLImageElement
+          if (img && img.complete) {
+            const aspectRatio = img.naturalWidth / img.naturalHeight
+            const width = calculateColumnWidth()
+            const height = width / aspectRatio
+            calculatePosition(file, height)
+          }
+        } else {
+          calculatePosition(file, 200) // 默认高度
+        }
+      })
+    })
+  }
+})
+
+// 监听文件列表变化
+watch(files, () => {
+  if (layout.value === 'grid') {
+    nextTick(() => {
+      // 初始化新文件的样式
+      files.value.forEach(file => {
+        if (!file.style) {
+          const width = calculateColumnWidth()
+          file.style = {
+            position: 'absolute',
+            width: `${width}px`,
+            opacity: '0',
+            transform: 'translateY(50px)',
+            transition: 'all 0.5s ease'
+          }
+        }
+      })
+    })
+  }
+}, { deep: true })
+
+// 生命周期钩子
+onMounted(() => {
+  if (layout.value === 'grid') {
+    initColumnHeights()
+  }
+  
+  if (process.client) {
+    window.addEventListener('resize', handleResize)
+  }
+})
+
+onUnmounted(() => {
+  if (process.client) {
+    window.removeEventListener('resize', handleResize)
+  }
+})
 
 const onImageError = (event: Event, file: FileItem) => {
   const img = event.target as HTMLImageElement

@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'vue'
+
 export interface FileItem {
   name: string
   size: number
@@ -7,6 +9,7 @@ export interface FileItem {
   thumb?: string
   type: number
   raw_url?: string
+  style?: CSSProperties
 }
 
 export type LayoutType = 'grid' | 'list'

@@ -116,9 +116,14 @@ export const useAlistApi = () => {
           if (!file.is_dir && imageExts.some(ext => file.name.toLowerCase().endsWith(ext))) {
             // 如果没有缩略图和 raw_url，获取文件详情
             if (!file.thumb && !file.raw_url) {
-              const url = await getFileDetail(`${path}/${file.name}`)
-              if (url) {
-                file.raw_url = url
+              // const url = await getFileDetail(`${path}/${file.name}`)
+              // if (url) {
+              //   file.raw_url = url
+              // }
+              if (file.name.toLowerCase().endsWith('.heic')) {
+                file.raw_url = await convertHeicToJpeg(`${baseUrl.value}/d${path}/${file.name}?sign=${file.sign}`)
+              } else {
+                file.raw_url = `/proxy/${baseUrl.value}/d${path}/${file.name}?sign=${file.sign}`
               }
             }
           }
